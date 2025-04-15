@@ -33,7 +33,7 @@ This problem focuses on designing a Vision Transformer (ViT) from scratch for th
   - **Embedding Dimension:** 256 and 512  
   - **Transformer Layers:** 4 and 8  
   - **Attention Heads:** 2 and 4  
-  The MLP hidden dimension in each transformer block is set to four times the embedding dimension (e.g., 1024 for an embedding dimension of 256).
+  The MLP hidden dimension in each transformer block is set to either two or four times the embedding dimension (e.g., 1024 when embed_dim = 256).
 
 - **Training Setup:**  
   Both the ResNet‑18 baseline and ViT models are trained on CIFAR‑100 using similar hyperparameters:
@@ -72,7 +72,7 @@ This problem focuses on designing a Vision Transformer (ViT) from scratch for th
 - **ViT Performance:**  
   The Default ViT, using the chosen configuration, underperforms relative to the ResNet‑18 baseline. Among the ViT configurations, models employing a smaller patch size (4×4) and lower embedding dimension (256) with 4 transformer layers and 4 attention heads (Config1 and Config2) yield better validation and test accuracies compared to larger models (Config3 and Config4). The latter, which employ an 8×8 patch size and an embedding dimension of 512, have a higher parameter count and longer training times but exhibit markedly lower accuracy, likely due to over-parameterization on the available dataset.
 - **Trade-offs:**  
-  Increasing the model capacity by adding layers and larger dimensions does not necessarily improve accuracy on a small-scale dataset like CIFAR‑100. More complex models require longer training times and incur higher computational costs, often yielding diminishing returns in performance.
+  Increasing model capacity by adding more layers and larger dimensions does not necessarily improve accuracy on a small-scale dataset like CIFAR‑100. More complex models require longer training times and incur higher computational costs, often yielding diminishing returns in performance.
 
 ### 1.5 Conclusions
 ResNet‑18 achieves a test accuracy of 65.86%, confirming the effectiveness of traditional convolutional neural networks on CIFAR‑100. In contrast, the Default ViT, with a substantially lower parameter count, attains only 45.89% test accuracy. Among the various ViT configurations, those employing a 4×4 patch size and an embedding dimension of 256 with 4 transformer layers and 4 attention heads (Config1 and Config2) deliver comparatively better performance (with test accuracies of 38.72% and 42.72%, respectively) than configurations using an 8×8 patch size and 512 embedding dimension, which achieve test accuracies below 7%. These results indicate that, for CIFAR‑100, increased model capacity beyond a certain point leads to over-parameterization and decreased performance, along with increased training time and computational expense.
@@ -82,23 +82,23 @@ ResNet‑18 achieves a test accuracy of 65.86%, confirming the effectiveness of 
 ## Problem 2: Fine-tuning Pretrained Swin Transformer Models on CIFAR-100
 
 ### 2.1 Introduction
-This problem examines the fine-tuning of pretrained Swin Transformer models from the Hugging Face Transformers library on the CIFAR‑100 dataset. The investigation compares the performance of the Tiny and Small variants against a Swin Transformer trained from scratch. Metrics such as training time per epoch, final validation accuracy, test accuracy, and model parameter counts are compared.
+This problem examines the fine-tuning of pretrained Swin Transformer models from the Hugging Face Transformers library on the CIFAR‑100 dataset. The investigation compares the performance of the Tiny and Small variants with the from-scratch trained ViT from Problem 1. Although training a Swin Transformer from scratch was previously performed, the current focus is on the fine-tuning of pretrained models and their comparison with the from-scratch ViT results from Problem 1.
 
 ### 2.2 Implementation Details
 - **Pretrained Models:**  
-  Swin‑Tiny and Swin‑Small are loaded using `SwinForImageClassification.from_pretrained()`, with their classification heads adjusted to output 100 classes. The backbone is frozen, and only the classifier head is fine-tuned.
-- **Swin from Scratch:**  
-  A Swin Transformer is instantiated from a configuration derived from the Swin‑Tiny config, modified for CIFAR‑100 (with `num_labels=100`), and randomly initialized.
+  Swin‑Tiny and Swin‑Small are loaded using `SwinForImageClassification.from_pretrained()`, with their classification heads adjusted to output 100 classes. The backbone is frozen so that only the classifier head is fine-tuned.
+- **Swin from Scratch (Optional):**  
+  A Swin Transformer from scratch was also trained; however, the primary comparative analysis is between the fine-tuned Swin models and the from-scratch ViT model from Problem 1.
 - **Training Setup:**  
   - **Epochs:** 5  
   - **Batch Size:** 32  
   - **Optimizers:**  
-    - Pretrained models use Adam with a learning rate of 2e-5.  
-    - The scratch model uses Adam with a learning rate of 0.001.  
+    - Pretrained models are fine-tuned using Adam with a learning rate of 2e-5.  
+    - The scratch model was trained using Adam with a learning rate of 0.001 (its results are noted but not the main focus).  
   - **Preprocessing:**  
-    Images are resized to 224×224 and normalized using the mean and standard deviation from the pretrained image processor.
+    Images are resized to 224×224 and normalized using the mean and standard deviation from a pretrained image processor.
 - **Metrics Recorded:**  
-  Training time per epoch, final validation accuracy, test accuracy, and parameter counts.
+  Training time per epoch, final validation accuracy, test accuracy, and parameter counts are recorded for each model.
 
 ### 2.3 Experimental Results
 
@@ -116,12 +116,12 @@ This problem examines the fine-tuning of pretrained Swin Transformer models from
   ![Swin Accuracy Comparison](./images/p2_swin_accuracy_comparison.png)
 
 ### 2.4 Analysis and Discussion
-Fine-tuning the pretrained Swin‑Tiny and Swin‑Small models produces significantly higher accuracy than training the same architecture from scratch. The pretrained models attain test accuracies of 65.60% and 69.48%, respectively, while the model trained from scratch achieves only 1.00% test accuracy, despite a much larger parameter count. This disparity highlights the importance of leveraging pretrained feature representations when training data is limited. Additionally, although the Swin‑Small model requires a longer training time per epoch than Swin‑Tiny, it provides marginally higher accuracy, suggesting that the additional model capacity is advantageous under fine-tuning conditions.
+Fine-tuning the pretrained Swin‑Tiny and Swin‑Small models produces significantly higher accuracy than training the same architecture from scratch. The pretrained models attain test accuracies of 65.60% and 69.48%, respectively, while the model trained from scratch achieves only 1.00% test accuracy, despite a much larger parameter count. This disparity emphasizes the advantage of leveraging pretrained feature representations when training data is limited. Furthermore, although the Swin‑Small model requires a longer training time per epoch than Swin‑Tiny, its marginally higher accuracy suggests that the additional capacity is beneficial under fine-tuning conditions. For comparative analysis, the results from Problem 2 are contrasted with the from-scratch trained ViT model from Problem 1, where the latter underperformed relative to the fine-tuned Swin models on CIFAR‑100.
 
 ### 2.5 Conclusions
-The experiments demonstrate a clear advantage for fine-tuning pretrained Swin Transformer models over training from scratch. Pretrained Swin‑Tiny and Swin‑Small models achieve test accuracies of 65.60% and 69.48%, respectively, whereas the model trained from scratch reaches only 1.00%. This significant difference underscores the benefit of using pretrained weights to obtain robust feature representations from limited data. Although the Swin‑Small model incurs a longer training time per epoch compared to Swin‑Tiny, its slightly higher accuracy indicates that additional capacity can be beneficial when pretrained. Overall, these results emphasize that transfer learning is critical for achieving competitive performance on small-scale image classification tasks such as CIFAR‑100.
+The experiments demonstrate a clear advantage for fine-tuning pretrained Swin Transformer models over training from scratch. Pretrained Swin‑Tiny and Swin‑Small models achieve test accuracies of 65.60% and 69.48%, respectively, whereas the model trained from scratch obtains only 1.00%. This significant difference underscores the benefit of using pretrained weights to obtain robust feature representations from limited data. Although the Swin‑Small model incurs a longer training time per epoch compared to Swin‑Tiny, its slightly higher accuracy indicates that additional capacity can be beneficial when pretrained. The comparative analysis—with the from-scratch trained ViT model from Problem 1—illustrates that pretrained Swin models offer a more effective solution for CIFAR‑100.
 
 ---
 
 ## General Conclusions
-A trade-off exists among model complexity, computational cost, training time, and final accuracy. Traditional CNN architectures like ResNet‑18 continue to perform robustly on CIFAR‑100. Fine-tuning pretrained models—specifically, pretrained Swin Transformer variants—yields significantly better performance than training from scratch, even when the latter possesses a vastly higher parameter count. The experiments highlight that increased model capacity does not guarantee improved performance on limited datasets and that pretrained backbones offer a practical solution to reduce training time and enhance generalization. Future work could explore hybrid architectures or more sophisticated training schemes (e.g., adaptive learning rate schedules, advanced data augmentation, or ensembling) to further improve performance.
+A trade-off exists among model complexity, computational cost, training time, and final accuracy. Traditional CNN architectures such as ResNet‑18 continue to perform robustly on CIFAR‑100. Fine-tuning pretrained models—specifically, the Swin Transformer variants—yields significantly better performance than training models from scratch, even when the latter possess a vastly higher parameter count. Increased model capacity does not guarantee improved performance on limited datasets; pretrained backbones offer a practical solution to reduce training time and enhance generalization.
